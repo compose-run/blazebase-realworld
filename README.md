@@ -1,6 +1,6 @@
 # Blazebase implementation of the [RealWorld](https://github.com/gothinkster/realworld) spec
 
-## [Live demo](https://compose-run.github.io/blazebase-realworld-example-app/#/)
+## [Live demo](https://compose-run.github.io/blazebase-realworld/#/)
 
 This codebase was created to demonstrate a fully fledged fullstack application built with React, Typescript, and Blazebase.
 
