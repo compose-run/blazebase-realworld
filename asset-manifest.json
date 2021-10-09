@@ -1,0 +1,20 @@
+{
+  "files": {
+    "main.css": "/blazebase-realworld-example-app/static/css/main.afd7172b.chunk.css",
+    "main.js": "/blazebase-realworld-example-app/static/js/main.e590918c.chunk.js",
+    "main.js.map": "/blazebase-realworld-example-app/static/js/main.e590918c.chunk.js.map",
+    "runtime-main.js": "/blazebase-realworld-example-app/static/js/runtime-main.d291476f.js",
+    "runtime-main.js.map": "/blazebase-realworld-example-app/static/js/runtime-main.d291476f.js.map",
+    "static/js/2.a394ea92.chunk.js": "/blazebase-realworld-example-app/static/js/2.a394ea92.chunk.js",
+    "static/js/2.a394ea92.chunk.js.map": "/blazebase-realworld-example-app/static/js/2.a394ea92.chunk.js.map",
+    "index.html": "/blazebase-realworld-example-app/index.html",
+    "static/css/main.afd7172b.chunk.css.map": "/blazebase-realworld-example-app/static/css/main.afd7172b.chunk.css.map",
+    "static/js/2.a394ea92.chunk.js.LICENSE.txt": "/blazebase-realworld-example-app/static/js/2.a394ea92.chunk.js.LICENSE.txt"
+  },
+  "entrypoints": [
+    "static/js/runtime-main.d291476f.js",
+    "static/js/2.a394ea92.chunk.js",
+    "static/css/main.afd7172b.chunk.css",
+    "static/js/main.e590918c.chunk.js"
+  ]
+}
