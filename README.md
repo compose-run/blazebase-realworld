@@ -70,6 +70,16 @@ _Build fullstack apps rapidly, without leaving your React Component_
 
 Blazebase is an experimental backend-as-a-service to provide realtime persistence to React apps.
 
+✅ Add to your app in 60 seconds
+✅ Authentication and realtime updates out-of-the-box
+✅ You don't have to learn anything new: it's just React on the backend
+✅ Immutable database forks tame schema migration hell and fit into your development and git branching workflow
+✅ Reusable Realtime React Components, which bring their data with them, and send updates back
+✅ Realtime, Authentication, Storage, and more from the Firebase platform
+✅ Open-source. No lock-in.
+❌ Scalable
+❌ Battle-tested
+
 We try as much as possible to keep you in the flow of building your React frontend. There's no separate tool you have to use, build step to run, new abstractions to learn, or deploy configurations you have to write. We want it to feel like you're _programming your entire backend inside React hooks!_
 
 The main downside is that it currently doesn't scale past what fits into your user's browser. So that's maybe 10k items? In other words, don't use this if you're building something real that needs to scale. We hope to solve this problem shortly, but we're focused on getting the DX right with small-data applications first. Think: hackathon or side project.
