@@ -1,3 +1,4 @@
+import { equals } from 'ramda';
 import { useReducer, useEffect, useCallback, useRef, Reducer, Dispatch, ReducerAction, ReducerState } from 'react';
 import { initializeApp } from 'firebase/app';
 import {
@@ -405,7 +406,8 @@ export function useRealtimeReducer<A, B, C>({
   loadingValue: A;
 }): [A, (b: B) => Promise<C>] {
   const [realtimeContext, emitEvent] = useReducerSafe(
-    (context, event) => realtimeReducer(name, reducer, initialValue, loadingValue, context, event),
+    (context: RealtimeReducerContext<A, B>, event: RealtimeEvent<A, B>) =>
+      realtimeReducer(name, reducer, initialValue, loadingValue, context, event),
     {
       currentValue: loadingValue,
       pendingEvents: [],
@@ -428,7 +430,7 @@ export function useRealtimeReducer<A, B, C>({
         const { reducerCode, initial } = snapshot.data();
         if (reducerCode !== reducer.toString()) {
           emitEvent({
-            kind: 'MismatchedReducer',
+            kind: 'MismatchedReducerEvent',
           });
           throw new Error(
             `The reducer supplied to ${name} does not exactly match the reducer initially supplied. Bump the name and migrate over data from ${name} to create a new reducer.`
@@ -436,9 +438,9 @@ export function useRealtimeReducer<A, B, C>({
         }
         if (
           !isPromise(initialValue) && // todo - find a way to provide this warning for promises
-          JSON.stringify(initial) !== JSON.stringify(initialValue)
+          !equals(initial, initialValue)
         ) {
-          throw new Error(`Initial value supplied to reducer ${name} is ignored because initial value already found`);
+          console.warn(`Initial value supplied to reducer ${name} is ignored because initial value already found`);
         }
       }
     });

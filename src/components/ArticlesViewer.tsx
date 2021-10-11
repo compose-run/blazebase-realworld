@@ -95,7 +95,7 @@ function ArticleList({ articles }) {
           No articles are here... yet.
         </div>
       )}
-      {articles.map((article, index) => (
+      {articles.map((article) => (
         <ArticlePreview key={article.slug} article={article} />
       ))}
     </Fragment>

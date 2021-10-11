@@ -21,7 +21,7 @@ export function Login() {
 
     setLoggingIn(true);
 
-    const user = users.find((u) => u.email === email);
+    const user = users && users.find((u) => u.email === email);
     if (!user) {
       setErrors({ email: ['not found'] });
       setLoggingIn(false);

@@ -13,7 +13,7 @@ export function Register() {
   const [signingUp, setSigningUp] = useState(false);
   const [user, setUser] = useState({ username: '', email: '', password: '' });
 
-  const [users, emitUserAction] = useUsers();
+  const [, emitUserAction] = useUsers();
 
   function onUpdateField(name: string, value: string) {
     setUser({ ...user, [name]: value });
