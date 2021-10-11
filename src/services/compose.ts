@@ -14,8 +14,9 @@ import {
   getDocs,
   setDoc,
   Timestamp,
+  connectFirestoreEmulator,
 } from 'firebase/firestore';
-import { getAuth, onAuthStateChanged, User as FirebaseUser } from 'firebase/auth';
+import { getAuth, connectAuthEmulator, onAuthStateChanged, User as FirebaseUser } from 'firebase/auth';
 
 // TODO - will need to find a way for users to supply their own firebase credentials
 const firebaseConfig = {
@@ -34,6 +35,9 @@ const db = initializeFirestore(app, {
   ignoreUndefinedProperties: true,
 });
 export const firebaseAuth = getAuth(app);
+
+connectFirestoreEmulator(db, 'localhost', 8080);
+connectAuthEmulator(firebaseAuth, 'http://localhost:9099');
 
 // There are sometimes race conditions around cleaning up
 // a memory leak and when React detects and complains about it
