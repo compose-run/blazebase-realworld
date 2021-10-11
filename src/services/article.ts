@@ -245,7 +245,7 @@ interface CommentNormalized {
   createdAt: number;
 }
 
-type NormalizedCommentDB = { [key: Slug]: CommentNormalized[] };
+type NormalizedCommentDB = { [slug: string]: CommentNormalized[] };
 
 interface CommentResolve {
   errors?: { unauthorized?: string };
@@ -296,7 +296,7 @@ export interface Comment {
   author: User;
 }
 
-type CommentsDB = { [slug: Slug]: Comment[] };
+type CommentsDB = { [slug: string]: Comment[] };
 
 export const useArticleComments = (): CommentsDB => {
   const [comments] = useArticleCommentsDB();
