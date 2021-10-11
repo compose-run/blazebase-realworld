@@ -44,7 +44,7 @@ function renderBanner() {
 
 function buildTabsNames(selectedTab: string) {
   const user = useUser();
-  return Array.from(new Set([...(user ? ['Your Feed'] : []), 'Global Feed']));
+  return Array.from(new Set([...(user ? ['Your Feed'] : []), selectedTab, 'Global Feed']));
 }
 
 function HomeSidebar({ setSelectedTab }) {

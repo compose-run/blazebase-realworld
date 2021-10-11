@@ -29,6 +29,7 @@ export function ProfilePage() {
       type: profile.following ? 'UnfollowAction' : 'FollowAction',
       follower: user.uid,
       leader: profile.uid,
+      uid: user.uid,
     });
 
     setSubmittingFollow(false);

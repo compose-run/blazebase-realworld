@@ -2,7 +2,6 @@ import { format } from 'date-fns';
 import { Fragment, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { Article } from './../../types/article';
-import { Comment } from './../../types/comment';
 import { redirect } from './../../types/location';
 import { classObjectToClassName } from './../../types/style';
 import { useFollowers, useUser } from './../../services/user';
@@ -14,6 +13,7 @@ import {
   useArticleFavorites,
   useArticles,
   useArticlesDB,
+  Comment,
 } from '../../services/article';
 
 export function ArticlePage() {
@@ -146,6 +146,7 @@ function NonOwnerArticleMetaActions({
     await emitFollowAction({
       type: following ? 'UnfollowAction' : 'FollowAction',
       follower: user.uid,
+      uid: user.uid,
       leader: uid,
     });
 
@@ -237,7 +238,7 @@ function CommentSection({ article }: { article: Article }) {
         {comments ? (
           <Fragment>
             {(comments[article.slug] || []).map((comment, index) => (
-              <ArticleComment key={comment.id} comment={comment} slug={article.slug} user={user} index={index} />
+              <ArticleComment key={comment.commentId} comment={comment} slug={article.slug} user={user} index={index} />
             ))}
           </Fragment>
         ) : (

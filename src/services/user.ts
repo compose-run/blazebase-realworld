@@ -15,17 +15,16 @@ interface UpdateUserAction {
 
 type UserAction = SignUpUserAction | UpdateUserAction;
 
-type UserDB = User[]
+type UserDB = User[];
 
-const usersVersion = 103;
+const usersVersion = 107;
 export const useUsers = () =>
-  useRealtimeReducer<UserDB,UserAction,any>({
-    // <User[] | null, UserAction, GenericErrors>({
+  useRealtimeReducer<UserDB, UserAction, GenericErrors>({
     name: `conduit-users-${usersVersion}`,
     initialValue: getRealtimeState(`conduit-users-${usersVersion - 1}`),
     loadingValue: null,
     reducer: (users, action, resolve) => {
-      let errors = {};
+      const errors = {};
       let returnValue = users;
       if (action.type === 'SIGN_UP') {
         if (users.some((u) => u.email === action.user.email)) {
@@ -73,12 +72,10 @@ interface FollowUserAction {
   leader: UId;
 }
 
-//type FollowUserAction = DoFollowUserAction | UnFollowUserAction;
-
 export const useFollowers = () =>
   useRealtimeReducer({
     name: `conduit-followers-${usersVersion}`,
-    initialValue: getRealtimeState(`conduit-followers-${usersVersion - 1}`),
+    initialValue: getRealtimeState(`conduit-followers-${usersVersion - 1}`).then((s) => s || {}),
     loadingValue: null,
     reducer: (userFollowers, action: FollowUserAction, resolve) => {
       const { follower, leader } = action;
@@ -102,7 +99,7 @@ export const useFollowers = () =>
 
 export const useUser = () => {
   const firebaseUser = useFirebaseUser();
-  const [users]: [UserDB, any] = useUsers();
+  const [users] = useUsers();
 
   return firebaseUser && users && users.find((user) => user.uid === firebaseUser.uid);
 };
