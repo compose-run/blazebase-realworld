@@ -1,4 +1,4 @@
-import { equals } from 'ramda';
+// import { equals } from 'ramda';
 import { useReducer, useEffect, useCallback, useRef, Reducer, Dispatch, ReducerAction, ReducerState } from 'react';
 import { initializeApp } from 'firebase/app';
 import {
@@ -11,7 +11,7 @@ import {
   orderBy,
   limit,
   doc,
-  getDoc,
+  // getDoc,
   getDocs,
   setDoc,
   Timestamp,
@@ -424,27 +424,27 @@ export function useRealtimeReducer<A, B, C>({
   );
 
   // confirm reducer and initial values are the same as the initial ones
-  useEffect(() => {
-    getDoc(doc(db, 'behaviors-reducers', name)).then((snapshot) => {
-      if (snapshot.exists()) {
-        const { reducerCode, initial } = snapshot.data();
-        if (reducerCode !== reducer.toString()) {
-          emitEvent({
-            kind: 'MismatchedReducerEvent',
-          });
-          throw new Error(
-            `The reducer supplied to ${name} does not exactly match the reducer initially supplied. Bump the name and migrate over data from ${name} to create a new reducer.`
-          );
-        }
-        if (
-          !isPromise(initialValue) && // todo - find a way to provide this warning for promises
-          !equals(initial, initialValue)
-        ) {
-          console.warn(`Initial value supplied to reducer ${name} is ignored because initial value already found`);
-        }
-      }
-    });
-  }, [name, initialValue, reducer, emitEvent]);
+  // useEffect(() => {
+  //   getDoc(doc(db, 'behaviors-reducers', name)).then((snapshot) => {
+  //     if (snapshot.exists()) {
+  //       const { reducerCode, initial } = snapshot.data();
+  //       if (reducerCode !== reducer.toString()) {
+  //         emitEvent({
+  //           kind: 'MismatchedReducerEvent',
+  //         });
+  //         throw new Error(
+  //           `The reducer supplied to ${name} does not exactly match the reducer initially supplied. Bump the name and migrate over data from ${name} to create a new reducer.`
+  //         );
+  //       }
+  //       if (
+  //         !isPromise(initialValue) && // todo - find a way to provide this warning for promises
+  //         !equals(initial, initialValue)
+  //       ) {
+  //         console.warn(`Initial value supplied to reducer ${name} is ignored because initial value already found`);
+  //       }
+  //     }
+  //   });
+  // }, [name, initialValue, reducer, emitEvent]);
 
   // get initial behavior from firebase cache
   useEffect(() => {
