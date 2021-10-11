@@ -1,20 +1,20 @@
 {
   "files": {
     "main.css": "/blazebase-realworld/static/css/main.afd7172b.chunk.css",
-    "main.js": "/blazebase-realworld/static/js/main.c0c453df.chunk.js",
-    "main.js.map": "/blazebase-realworld/static/js/main.c0c453df.chunk.js.map",
+    "main.js": "/blazebase-realworld/static/js/main.87b0a712.chunk.js",
+    "main.js.map": "/blazebase-realworld/static/js/main.87b0a712.chunk.js.map",
     "runtime-main.js": "/blazebase-realworld/static/js/runtime-main.e5418cdf.js",
     "runtime-main.js.map": "/blazebase-realworld/static/js/runtime-main.e5418cdf.js.map",
-    "static/js/2.6b4724ba.chunk.js": "/blazebase-realworld/static/js/2.6b4724ba.chunk.js",
-    "static/js/2.6b4724ba.chunk.js.map": "/blazebase-realworld/static/js/2.6b4724ba.chunk.js.map",
+    "static/js/2.234fcdab.chunk.js": "/blazebase-realworld/static/js/2.234fcdab.chunk.js",
+    "static/js/2.234fcdab.chunk.js.map": "/blazebase-realworld/static/js/2.234fcdab.chunk.js.map",
     "index.html": "/blazebase-realworld/index.html",
     "static/css/main.afd7172b.chunk.css.map": "/blazebase-realworld/static/css/main.afd7172b.chunk.css.map",
-    "static/js/2.6b4724ba.chunk.js.LICENSE.txt": "/blazebase-realworld/static/js/2.6b4724ba.chunk.js.LICENSE.txt"
+    "static/js/2.234fcdab.chunk.js.LICENSE.txt": "/blazebase-realworld/static/js/2.234fcdab.chunk.js.LICENSE.txt"
   },
   "entrypoints": [
     "static/js/runtime-main.e5418cdf.js",
-    "static/js/2.6b4724ba.chunk.js",
+    "static/js/2.234fcdab.chunk.js",
     "static/css/main.afd7172b.chunk.css",
-    "static/js/main.c0c453df.chunk.js"
+    "static/js/main.87b0a712.chunk.js"
   ]
 }
