@@ -4,6 +4,7 @@ import { useArticlesDB } from './../../services/article';
 import { useUser } from './../../services/user';
 import { ArticleEditor } from './../ArticleEditor';
 import { redirect } from '../../types/location';
+import slugify from 'slugify';
 
 export function NewArticle() {
   const user = useUser();
@@ -20,7 +21,7 @@ export function NewArticle() {
         article: newArticle,
         createdAt: Date.now(),
         uid: user.uid,
-        slug: Math.random().toString(), // TODO - better slug
+        slug: generateSlug(newArticle.title),
       });
 
       setSubmitting(false);
@@ -36,4 +37,8 @@ export function NewArticle() {
   }
 
   return <ArticleEditor onSubmit={onSubmit} errors={errors} submitting={submitting} />;
+}
+
+function generateSlug(title) {
+  return slugify(title, { remove: /[^\w\s-]/g }) + '-' + ((Math.random() * Math.pow(36, 6)) | 0).toString(36);
 }

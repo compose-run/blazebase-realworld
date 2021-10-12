@@ -156,7 +156,6 @@ export const useTags = () => {
 
 // when an article is created, this creates all the tags for it
 function updateArticleTags(payload: { slug: Slug; tagList: string[]; uid: UId }) {
-  // TODO - have a proper pattern for getting an emitter without the data
   return emitWithResponse(`conduit-tags-${articlesVersion}`, { ...payload, type: 'UpdateArticleTags' });
 }
 
@@ -218,7 +217,6 @@ export const useArticles = (): Article[] => {
   return articles;
 };
 
-// TODO: Deduplicate shared fields in these actions.
 interface CreateCommentAction {
   type: 'CreateComment';
   uid: UId;

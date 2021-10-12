@@ -8,8 +8,6 @@ export function Home() {
   const user = useUser();
   const [selectedTab, setSelectedTab] = useState(user ? 'Your Feed' : 'Global Feed');
 
-  // TODO - do I need to wrap setSelectedTab to also modify the URL hash? (look at the previous version)
-
   return (
     <div className='home-page'>
       {renderBanner()}

@@ -4,8 +4,8 @@ import { buildGenericFormField } from './../../types/genericFormField';
 import { GenericForm } from './../GenericForm';
 import { ContainerPage } from './../ContainerPage';
 import { UserSettings } from '../../types/user';
-import { signOut } from 'firebase/auth';
-import { firebaseAuth } from '../../services/compose';
+import { signOut, updateEmail } from 'firebase/auth';
+import { firebaseAuth, useFirebaseUser } from '../../services/compose';
 import { redirect } from '../../types/location';
 
 export interface SettingsField {
@@ -17,6 +17,7 @@ export interface SettingsField {
 
 export function Settings() {
   const oldUser = useUser();
+  const firebaseUser = useFirebaseUser();
   const [newUser, setUser] = useState(null);
   const [errors, setErrors] = useState({});
   const [updating, setUpdating] = useState(false);
@@ -36,7 +37,10 @@ export function Settings() {
     }
 
     setUpdating(true);
-    // TODO if email change, do that in firebase auth
+
+    if (oldUser.email !== newUser.email) {
+      updateEmail(firebaseUser, newUser.email);
+    }
 
     const errors = await emitUserAction({
       type: 'UPDATE',
