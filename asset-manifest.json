@@ -1,20 +1,20 @@
 {
   "files": {
     "main.css": "/blazebase-realworld/static/css/main.afd7172b.chunk.css",
-    "main.js": "/blazebase-realworld/static/js/main.3784490c.chunk.js",
-    "main.js.map": "/blazebase-realworld/static/js/main.3784490c.chunk.js.map",
+    "main.js": "/blazebase-realworld/static/js/main.b904646b.chunk.js",
+    "main.js.map": "/blazebase-realworld/static/js/main.b904646b.chunk.js.map",
     "runtime-main.js": "/blazebase-realworld/static/js/runtime-main.e5418cdf.js",
     "runtime-main.js.map": "/blazebase-realworld/static/js/runtime-main.e5418cdf.js.map",
-    "static/js/2.7cb29e46.chunk.js": "/blazebase-realworld/static/js/2.7cb29e46.chunk.js",
-    "static/js/2.7cb29e46.chunk.js.map": "/blazebase-realworld/static/js/2.7cb29e46.chunk.js.map",
+    "static/js/2.031d69d4.chunk.js": "/blazebase-realworld/static/js/2.031d69d4.chunk.js",
+    "static/js/2.031d69d4.chunk.js.map": "/blazebase-realworld/static/js/2.031d69d4.chunk.js.map",
     "index.html": "/blazebase-realworld/index.html",
     "static/css/main.afd7172b.chunk.css.map": "/blazebase-realworld/static/css/main.afd7172b.chunk.css.map",
-    "static/js/2.7cb29e46.chunk.js.LICENSE.txt": "/blazebase-realworld/static/js/2.7cb29e46.chunk.js.LICENSE.txt"
+    "static/js/2.031d69d4.chunk.js.LICENSE.txt": "/blazebase-realworld/static/js/2.031d69d4.chunk.js.LICENSE.txt"
   },
   "entrypoints": [
     "static/js/runtime-main.e5418cdf.js",
-    "static/js/2.7cb29e46.chunk.js",
+    "static/js/2.031d69d4.chunk.js",
     "static/css/main.afd7172b.chunk.css",
-    "static/js/main.3784490c.chunk.js"
+    "static/js/main.b904646b.chunk.js"
   ]
 }
