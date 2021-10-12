@@ -170,7 +170,7 @@ type ArticleFavoriteDB = { slug: Slug; uid: UId }[];
 export const useArticleFavorites = () =>
   useRealtimeReducer<ArticleFavoriteDB | null, FavoriteAction, GenericErrors>({
     name: `conduit-favorites-${articlesVersion}`,
-    initialValue: [], //getRealtimeState(`conduit-favorites-${articlesVersion - 1}`).then((s) => s || []),
+    initialValue: getRealtimeState(`conduit-favorites-${articlesVersion - 1}`).then((s) => s || []),
     loadingValue: null,
     reducer: (articleFavorites, action, resolve) => {
       const { slug, uid } = action;
@@ -252,7 +252,7 @@ interface CommentResolve {
 export const useArticleCommentsDB = () =>
   useRealtimeReducer<NormalizedCommentDB | null, CommentAction, CommentResolve>({
     name: `conduit-comments-${articlesVersion}`,
-    initialValue: [], // getRealtimeState(`conduit-comments-${articlesVersion - 1}`).then((s) => s || []),
+    initialValue: getRealtimeState(`conduit-comments-${articlesVersion - 1}`).then((s) => s || []),
     loadingValue: null,
     reducer: (comments, action, resolve) => {
       if (!action.uid) {
