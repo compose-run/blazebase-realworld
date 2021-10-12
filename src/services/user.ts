@@ -21,9 +21,10 @@ const usersVersion = 107;
 export const useUsers = () =>
   useRealtimeReducer<UserDB, UserAction, GenericErrors>({
     name: `conduit-users-${usersVersion}`,
-    initialValue: getRealtimeState(`conduit-users-${usersVersion - 1}`),
+    initialValue: [],
     loadingValue: null,
     reducer: (users, action, resolve) => {
+      //      let users = users_ || [];
       const errors = {};
       let returnValue = users;
       if (action.type === 'SIGN_UP') {

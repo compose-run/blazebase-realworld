@@ -3,7 +3,7 @@ import { useTags } from '../../services/article';
 import { useUser } from '../../services/user';
 import { ArticlesViewer } from '../ArticlesViewer';
 import { ContainerPage } from '../ContainerPage';
-
+import { CommentsListViewer, CommentForm } from '../CommentsViewer';
 export function Home() {
   const user = useUser();
   const [selectedTab, setSelectedTab] = useState(user ? 'Your Feed' : 'Global Feed');
@@ -22,7 +22,12 @@ export function Home() {
             onTabChange={setSelectedTab}
           />
         </div>
-
+        <div>
+          <CommentsListViewer />
+        </div>
+        <div>
+          <CommentForm />
+        </div>
         <div className='col-md-3'>
           <HomeSidebar setSelectedTab={setSelectedTab} />
         </div>
