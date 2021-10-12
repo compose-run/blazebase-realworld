@@ -236,11 +236,11 @@ function CommentSection({ article }: { article: Article }) {
           </p>
         )}
         {comments ? (
-          <Fragment>
-            {(comments[article.slug] || []).map((comment, index) => (
+          comments
+            .filter(({ slug }) => slug === article.slug)
+            .map((comment, index) => (
               <ArticleComment key={comment.commentId} comment={comment} slug={article.slug} user={user} index={index} />
-            ))}
-          </Fragment>
+            ))
         ) : (
           <div>Loading comments...</div>
         )}

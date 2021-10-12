@@ -3,6 +3,7 @@ import { emitWithResponse, getRealtimeState, useRealtimeReducer } from '../servi
 import { GenericErrors } from '../types/error';
 import { Article, ArticleForEditor } from '../types/article';
 import { User, UId } from '../types/user';
+import { uniq } from 'ramda';
 
 type Slug = string;
 interface CreateArticleAction {
@@ -44,7 +45,7 @@ interface ArticleResolve {
   errors?: GenericErrors;
 }
 
-const articlesVersion = 115;
+const articlesVersion = 116;
 export const useArticlesDB = () =>
   useRealtimeReducer<ArticleDB[], ArticleAction, ArticleResolve>({
     name: `conduit-articles-${articlesVersion}`,
@@ -52,10 +53,9 @@ export const useArticlesDB = () =>
     loadingValue: null,
     reducer: (articles, action, resolve) => {
       const errors = {};
-      let returnValue = articles;
       if (action.uid) {
         if (action.type === 'CreateArticleAction') {
-          returnValue = articles.concat([
+          articles = articles.concat([
             {
               slug: action.slug,
               title: action.article.title,
@@ -66,25 +66,35 @@ export const useArticlesDB = () =>
               uid: action.uid,
             },
           ]);
-          updateArticleTags({ slug: action.slug, tagList: action.article.tagList });
+          updateArticleTags({ slug: action.slug, uid: action.uid, tagList: action.article.tagList });
         } else if (action.type === 'UpdateArticleAction') {
-          // TODO - only do if action.uid matches
-          returnValue = articles.map((article) =>
-            article.slug == action.slug && article.uid === action.uid
-              ? {
-                  ...article,
-                  title: action.article.title,
-                  description: action.article.description,
-                  body: action.article.body,
-                  updatedAt: action.updatedAt,
-                }
-              : article
-          );
-          updateArticleTags({ slug: action.slug, tagList: action.article.tagList });
+          const article = articles.find(({ slug, uid }) => slug === action.slug && uid == action.uid);
+          if (!article) {
+            errors['404'] = ['article not found to update'];
+          } else if (article.uid !== action.uid) {
+            errors['unauthorized'] = ['to edit article'];
+          } else {
+            articles = articles.map((article) =>
+              article.slug == action.slug && article.uid === action.uid
+                ? {
+                    ...article,
+                    title: action.article.title,
+                    description: action.article.description,
+                    body: action.article.body,
+                    updatedAt: action.updatedAt,
+                  }
+                : article
+            );
+            updateArticleTags({ slug: action.slug, uid: action.uid, tagList: action.article.tagList });
+          }
         } else if (action.type === 'DeleteArticleAction') {
-          // TODO - only do if action.uid matches
-          if (articles.find((a) => a.slug == action.slug).uid === action.uid) {
-            returnValue = articles.filter((article) => article.slug !== action.slug);
+          const article = articles.find(({ slug, uid }) => slug === action.slug && uid == action.uid);
+          if (!article) {
+            errors['404'] = ['article not found to update'];
+          } else if (article.uid !== action.uid) {
+            errors['unauthorized'] = ['to edit article'];
+          } else {
+            articles = articles.filter((article) => article.slug !== action.slug);
           }
         }
       } else {
@@ -96,12 +106,13 @@ export const useArticlesDB = () =>
         resolve({ slug: action.slug });
       }
 
-      return returnValue;
+      return articles;
     },
   });
 interface ArticleTag {
   slug: Slug;
   tag: string;
+  uid: UId;
 }
 
 interface UpdateArticleTags {
@@ -120,31 +131,32 @@ export const useArticleTags = () =>
     loadingValue: null,
     reducer: (articleTagsOption, action, resolve) => {
       const errors = {};
-      let returnValue = articleTagsOption as ArticleTag[]; // TODO rearchitect this around lookups like favorites?
-      if (action.uid === 'TODO') {
+      if (action.uid) {
         if (action.type === 'UpdateArticleTags') {
-          returnValue = returnValue.filter((pt) => pt.slug !== action.slug || action.tagList.includes(pt.tag));
-          returnValue = returnValue.concat(
-            action.tagList
-              .filter((tag) => !returnValue.some((pt) => pt.slug === action.slug && pt.tag === tag))
-              .map((tag) => ({ tag, slug: action.slug }))
+          // remove all tags for this article
+          articleTagsOption = articleTagsOption.filter((pt) => !(pt.uid == action.uid && pt.slug === action.slug));
+
+          // add in tags for this article
+          articleTagsOption = articleTagsOption.concat(
+            action.tagList.map((tag) => ({ tag, slug: action.slug, uid: action.uid }))
           );
         }
       } else {
         errors['unauthorized'] = 'to edit article';
       }
       resolve(errors);
-      return returnValue;
+      return articleTagsOption;
     },
   });
 
 export const useTags = () => {
   const [articleTags] = useArticleTags();
-  return articleTags && Array.from(new Set(articleTags.map(({ tag }) => tag)));
+  return articleTags && uniq(articleTags.map(({ tag }) => tag));
 };
 
-// TODO - what's going on with this function...?
-function updateArticleTags(payload: { slug: Slug; tagList: string[] }) {
+// when an article is created, this creates all the tags for it
+function updateArticleTags(payload: { slug: Slug; tagList: string[]; uid: UId }) {
+  // TODO - have a proper pattern for getting an emitter without the data
   return emitWithResponse(`conduit-tags-${articlesVersion}`, { ...payload, type: 'UpdateArticleTags' });
 }
 
@@ -154,38 +166,27 @@ interface FavoriteAction {
   uid: UId;
 }
 
+type ArticleFavoriteDB = { slug: Slug; uid: UId }[];
+
 export const useArticleFavorites = () =>
-  useRealtimeReducer({
+  useRealtimeReducer<ArticleFavoriteDB | null, FavoriteAction, GenericErrors>({
     name: `conduit-favorites-${articlesVersion}`,
-    initialValue: getRealtimeState(`conduit-favorites-${articlesVersion - 5}`).then(
-      (s) => s || { articles: {}, users: {} }
-    ),
+    initialValue: [], //getRealtimeState(`conduit-favorites-${articlesVersion - 1}`).then((s) => s || []),
     loadingValue: null,
-    reducer: ({ articles, users }, action: FavoriteAction, resolve) => {
-      if (!action.uid) {
-        resolve({ errors: { unauthorized: 'to perform this action' } });
-        return { articles, users };
+    reducer: (articleFavorites, action, resolve) => {
+      const { slug, uid } = action;
+      if (!uid) {
+        resolve({ errors: ['unauthorized to perform this action'] });
+        return articleFavorites;
       }
 
-      const { slug, uid } = action;
-      const favorite = action.type === 'FavoriteAction';
+      articleFavorites = articleFavorites.filter((f) => !(f.uid == uid && f.slug == slug));
 
-      return {
-        articles: {
-          ...articles,
-          [slug]: {
-            ...(articles[slug] || {}),
-            [uid]: favorite,
-          },
-        },
-        users: {
-          ...users,
-          [uid]: {
-            ...(users[uid] || {}),
-            [slug]: favorite,
-          },
-        },
-      };
+      if (action.type === 'FavoriteAction') {
+        articleFavorites = [...articleFavorites, { uid, slug }];
+      }
+
+      return articleFavorites;
     },
   });
 
@@ -209,10 +210,8 @@ export const useArticles = (): Article[] => {
       tagList: articleTags.filter((articleTag) => articleTag.slug === articleDB.slug).map(({ tag }) => tag),
       createdAt: new Date(articleDB.createdAt),
       updatedAt: new Date(articleDB.updatedAt),
-      favorited:
-        user && articleFavorites.articles[articleDB.slug] && articleFavorites.articles[articleDB.slug][user.uid],
-      favoritesCount: Object.values(articleFavorites.articles[articleDB.slug] || {}).filter((favorite) => favorite)
-        .length,
+      favorited: user && articleFavorites.some(({ slug, uid }) => user.uid === uid && slug === articleDB.slug),
+      favoritesCount: uniq(articleFavorites.filter(({ slug }) => slug === articleDB.slug)).length,
       author: authors.find((u) => u.uid === articleDB.uid),
     }));
 
@@ -243,9 +242,10 @@ interface CommentNormalized {
   commentId: number;
   body: string;
   createdAt: number;
+  slug: Slug;
 }
 
-type NormalizedCommentDB = { [slug: string]: CommentNormalized[] };
+type NormalizedCommentDB = CommentNormalized[];
 
 interface CommentResolve {
   errors?: { unauthorized?: string };
@@ -254,7 +254,7 @@ interface CommentResolve {
 export const useArticleCommentsDB = () =>
   useRealtimeReducer<NormalizedCommentDB | null, CommentAction, CommentResolve>({
     name: `conduit-comments-${articlesVersion}`,
-    initialValue: getRealtimeState(`conduit-comments-${articlesVersion - 1}`).then((s) => s || {}),
+    initialValue: [], // getRealtimeState(`conduit-comments-${articlesVersion - 1}`).then((s) => s || []),
     loadingValue: null,
     reducer: (comments, action, resolve) => {
       if (!action.uid) {
@@ -266,17 +266,11 @@ export const useArticleCommentsDB = () =>
 
       if (action.type === 'CreateComment') {
         const { body, createdAt } = action;
-        return {
-          ...comments,
-          [slug]: [...(comments[slug] || []), { uid, commentId, body, createdAt }],
-        };
+        return [...comments, { uid, commentId, body, createdAt, slug }];
       } else if (action.type === 'DeleteComment') {
         const comment = comments[slug].find((c) => c.commentId === commentId);
         if (comment && comment.uid === action.uid) {
-          return {
-            ...comments,
-            [slug]: [...(comments[slug] || []).filter((c) => c.commentId !== commentId)],
-          };
+          return comments.filter((c) => c.commentId !== commentId);
         } else {
           resolve({ errors: { unauthorized: 'to perform this action' } });
           return comments;
@@ -296,7 +290,7 @@ export interface Comment {
   author: User;
 }
 
-type CommentsDB = { [slug: string]: Comment[] };
+type CommentsDB = Comment[];
 
 export const useArticleComments = (): CommentsDB => {
   const [comments] = useArticleCommentsDB();
@@ -305,16 +299,10 @@ export const useArticleComments = (): CommentsDB => {
   return (
     comments &&
     users &&
-    Object.fromEntries(
-      Object.entries(comments).map(([slug, comments]) => [
-        slug,
-        comments.map((comment) => ({
-          ...comment,
-          slug,
-          createdAt: new Date(comment.createdAt),
-          author: users.find((u: User) => u.uid === comment.uid),
-        })),
-      ])
-    )
+    comments.map((comment) => ({
+      ...comment,
+      createdAt: new Date(comment.createdAt),
+      author: users.find((u: User) => u.uid === comment.uid),
+    }))
   );
 };

@@ -1,3 +1,4 @@
+import { equals } from 'ramda';
 import { getRealtimeState, useFirebaseUser, useRealtimeReducer } from '../services/compose';
 import { GenericErrors } from '../types/error';
 import { Profile } from '../types/profile';
@@ -17,7 +18,7 @@ type UserAction = SignUpUserAction | UpdateUserAction;
 
 type UserDB = User[];
 
-const usersVersion = 107;
+const usersVersion = 111;
 export const useUsers = () =>
   useRealtimeReducer<UserDB, UserAction, GenericErrors>({
     name: `conduit-users-${usersVersion}`,
@@ -25,7 +26,6 @@ export const useUsers = () =>
     loadingValue: null,
     reducer: (users, action, resolve) => {
       const errors = {};
-      let returnValue = users;
       if (action.type === 'SIGN_UP') {
         if (users.some((u) => u.email === action.user.email)) {
           errors['email'] = 'already in use';
@@ -37,17 +37,57 @@ export const useUsers = () =>
           errors['public-key'] = 'already in use';
         }
         if (!Object.keys(errors).length) {
-          returnValue = users.concat([action.user]);
+          users = users.concat([action.user]);
         }
       } else if (action.type === 'UPDATE') {
         if (action.uid) {
-          returnValue = users.map((u) => (u.uid === action.uid ? action.newUser : u));
+          users = users.map((u) => (u.uid === action.uid ? action.newUser : u));
         } else {
           errors['unauthorized'] = 'to perform update to user';
         }
       }
       resolve(errors);
-      return returnValue;
+      return users;
+    },
+  });
+
+export const useUser = () => {
+  const firebaseUser = useFirebaseUser();
+  const [users] = useUsers();
+
+  return firebaseUser && users && users.find((user) => user.uid === firebaseUser.uid);
+};
+interface FollowUserAction {
+  type: 'FollowAction' | 'UnfollowAction';
+  uid: UId;
+  follower: UId;
+  leader: UId;
+}
+
+type Follower = { leader: UId; follower: UId };
+
+type FollowersDB = Follower[];
+
+export const useFollowers = () =>
+  useRealtimeReducer<FollowersDB | null, FollowUserAction, GenericErrors>({
+    name: `conduit-followers-${usersVersion}`,
+    initialValue: getRealtimeState(`conduit-followers-${usersVersion - 1}`).then((s) => s || []),
+    loadingValue: null,
+    reducer: (userFollowers, action, resolve) => {
+      const { follower, leader } = action;
+
+      if (action.uid !== follower) {
+        resolve({ errors: ['unauthorized to perform this action'] });
+        return userFollowers;
+      }
+
+      const followers = userFollowers.filter((uf) => !equals(uf, { follower, leader }));
+
+      if (action.type === 'FollowAction') {
+        return [...followers, { follower, leader }];
+      } else {
+        followers;
+      }
     },
   });
 
@@ -60,46 +100,8 @@ export const useProfiles = (): Profile[] => {
     users &&
     users.map((u) => ({
       ...u,
-      following: user && followers && !!(followers[user.uid] || {})[u.uid],
+      following:
+        user && followers && followers.some(({ follower, leader }) => follower === user.uid && leader === u.uid),
     }))
   );
-};
-
-interface FollowUserAction {
-  type: 'FollowAction' | 'UnfollowAction';
-  uid: UId;
-  follower: UId;
-  leader: UId;
-}
-
-export const useFollowers = () =>
-  useRealtimeReducer({
-    name: `conduit-followers-${usersVersion}`,
-    initialValue: getRealtimeState(`conduit-followers-${usersVersion - 1}`).then((s) => s || {}),
-    loadingValue: null,
-    reducer: (userFollowers, action: FollowUserAction, resolve) => {
-      const { follower, leader } = action;
-
-      if (action.uid !== follower) {
-        resolve({ errors: { unauthorized: 'to perform this action' } });
-        return userFollowers;
-      }
-
-      const following = action.type === 'FollowAction';
-
-      return {
-        ...userFollowers,
-        [follower]: {
-          ...(userFollowers[follower] || {}),
-          [leader]: following,
-        },
-      };
-    },
-  });
-
-export const useUser = () => {
-  const firebaseUser = useFirebaseUser();
-  const [users] = useUsers();
-
-  return firebaseUser && users && users.find((user) => user.uid === firebaseUser.uid);
 };

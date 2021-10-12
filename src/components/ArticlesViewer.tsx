@@ -3,7 +3,7 @@ import { classObjectToClassName } from './../types/style';
 import { useFollowers, useUser } from './../services/user';
 import { ArticlePreview } from './ArticlePreview';
 import { Pagination } from './Pagination';
-import { useArticleFavorites, useArticles } from '../services/article';
+import { useArticles } from '../services/article';
 
 export function ArticlesViewer({
   toggleClassName,
@@ -22,7 +22,6 @@ export function ArticlesViewer({
   const user = useUser();
   const articles = useArticles();
   const [following] = useFollowers();
-  const [favorites] = useArticleFavorites();
 
   const feedArticles =
     articles &&
@@ -32,7 +31,8 @@ export function ArticlesViewer({
           selectedTab === 'Global Feed' ||
           (selectedTab === 'Your Feed' && user && following[user.uid] && following[user.uid][article.author.uid]) ||
           (selectedTab === 'My Articles' && article.author.uid === uid) ||
-          (selectedTab === 'Favorited Articles' && favorites.users[uid] && favorites.users[uid][article.slug])
+          (selectedTab === 'Favorited Articles' && article.favorited) ||
+          article.tagList.includes(selectedTab)
       )
       .sort((a, b) => a.createdAt.getTime() - b.createdAt.getTime());
 

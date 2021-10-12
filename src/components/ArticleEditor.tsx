@@ -1,5 +1,6 @@
+import { uniq } from 'ramda';
 import { useState } from 'react';
-import { ArticleForEditor } from './../types/article';
+import { ArticleForEditor } from '../types/article';
 import { GenericErrors } from './../types/error';
 import { buildGenericFormField } from './../types/genericFormField';
 import { ContainerPage } from './ContainerPage';
@@ -16,7 +17,9 @@ export function ArticleEditor({
   article?: ArticleForEditor;
   errors: GenericErrors;
 }) {
-  const [currentArticle, setCurrentArticle] = useState(article);
+  const [currentArticle, setCurrentArticle] = useState(
+    article || { title: '', body: '', description: '', tagList: [] }
+  );
   const [tagTextbox, setTagTextbox] = useState('');
 
   function onUpdateField(name: string, value: string) {
@@ -33,8 +36,9 @@ export function ArticleEditor({
   function onAddTag() {
     setCurrentArticle({
       ...currentArticle,
-      tagList: currentArticle.tagList.concat([tagTextbox]),
+      tagList: uniq(currentArticle.tagList.concat([tagTextbox])),
     });
+    setTagTextbox('');
   }
 
   function onRemoveTag(_: string, index: number) {
