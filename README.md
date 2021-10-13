@@ -140,7 +140,7 @@ function useRealtimeReducer<State, Action, Message>({
   initialValue: State | Promise<State>;
   reducer: (state: State, action: Action, resolve?: (message: Message) => void) => State;
   loadingValue: State;
-}): [State, (b: Action) => Promise<Message>];
+}): [State, (action: Action) => Promise<Message>];
 ```
 
 It returns an array. The first value represents the realtime, persistent state. The second is a function which allows you to dispatch values ("actions" in Redux terminology) to the reducer.
@@ -183,7 +183,7 @@ const useMessages = useRealtimeReducer<Message[] | null, MessageAction, MessageE
 });
 ```
 
-### `getRealtimeState<A>(name: string): Promise<A | null>`
+### `getRealtimeState<A>(name: string): Promise<State | null>`
 
 `getRealtimeState` accepts a realtime state name and returns a Promise with it's value.
 
