@@ -80,6 +80,34 @@ Blazebase is an experimental backend-as-a-service to provide realtime persistenc
 ❌ &nbsp;Scalable  
 ❌ &nbsp;Battle-tested
 
+```ts
+import { useState } from 'react';
+import { useRealtimeReducer } from 'blazebase';
+
+export default function ChatApp() {
+  const [message, setMessage] = useState('');
+
+  // realtime & persistent via blazebase
+  const [messages, newMessage] = useRealtimeReducer('steves-chat-app-4', (state, action) => acc.concat([action]), []);
+
+  return (
+    <div>
+      {messages ? messages.map((message, index) => <div key={index}>{message}</div>) : 'Loading...'}
+      <input
+        value={message}
+        onChange={(e) => setMessage(e.target.value)}
+        onKeyPress={(e) => {
+          if (e.key === 'Enter') {
+            newMessage(message);
+            setMessage('');
+          }
+        }}
+      />
+    </div>
+  );
+}
+```
+
 We try as much as possible to keep you in the flow of building your React frontend. There's no separate tool you have to use, build step to run, new abstractions to learn, or deploy configurations you have to write. We want it to feel like you're _programming your entire backend inside React hooks!_
 
 The main downside is that it currently doesn't scale past what fits into your user's browser. So that's maybe 10k items? In other words, don't use this if you're building something real that needs to scale. We hope to solve this problem shortly, but we're focused on getting the DX right with small-data applications first. Think: hackathon or side project.
@@ -102,19 +130,24 @@ Blazebase isn't currently ready public use. Contact steve@compose.run if you're 
 This is the core Blazebase function. It is a realtime and persistent version of the built-in `useReducer` React hook. Like `useReducer` it takes an `initialValue` and a `reducer` (as keyword arguments), but it also accepts a couple of extra parameters necessary for realtime persistence: `name` to uniquely identify the persistent state and `loadingValue` to be used during the initial load of state.
 
 ```ts
-useRealtimeReducer<A,B,C>({
+function useRealtimeReducer<State, Action, Message>({
+  name,
+  initialValue,
+  reducer,
+  loadingValue,
+}: {
   name: string;
-  initialValue: A | Promise<A>;
-  loadingValue: A;
-  reducer: (accumulator: A, current: B, resolver?: (c: C) => void) => A;
-}): [A, (b: B) => Promise<C>] {)
+  initialValue: State | Promise<State>;
+  reducer: (state: State, action: Action, resolve?: (message: Message) => void) => State;
+  loadingValue: State;
+}): [State, (b: Action) => Promise<Message>];
 ```
 
-It returns an array. The first value represents the realtime, persistent state. The second is a function which allows you to emit values ("actions" in Redux terminology) to the reducer.
+It returns an array. The first value represents the realtime, persistent state. The second is a function which allows you to dispatch values ("actions" in Redux terminology) to the reducer.
 
-You can imagine the reducer "running on the server", but in reality it runs on every user's browser. This means that _reducers **must** be deterministic_. When you use `Date.now` or `Math.random()`, do it on the client and emit those non-deterministic values to the reducer.
+You can imagine the reducer "running on the server", but in reality it runs on every user's browser. This means that _reducers **must** be deterministic_. When you use `Date.now` or `Math.random()`, do it on the client and dispatch those non-deterministic values to the reducer.
 
-`userRealtimeReducer` provides a way for the reducer to communicate directly back to the action emitter. This can useful when the frontend waits on a reducer to confirm or reject an action. For example, when a user picks a name that needs to be unique, your app can `await emitter(someAction)` for success or rejection message. You can send these messages back to emitters by having your reducer accept a third argument: a `resolver` function. In the reducer, you can `resolve(someMessage)` which will resolve the Promise for the emitter of that action.
+`useRealtimeReducer` provides a way for the reducer to communicate directly back to the action dispatcher. This can useful when the frontend waits on a reducer to confirm or reject an action. For example, when a user picks a name that needs to be unique, your app can `await dispatcher(someAction)` for success or rejection message. You can send these messages back to dispatchers by having your reducer accept a third argument: a `resolve` function. In the reducer, you can `resolve(someMessage)` which will resolve the Promise for the dispatcher of that action.
 
 #### Example Usage
 
@@ -179,10 +212,10 @@ However, a simple migration without a schema change is easy: just want to migrat
 
 ```ts
 const veryFirstValue = []
-const myStateVersion = 0
+const myStateVersion = 0 // increment this number to migrate the data
 useRealtimeReducer({
   name: `my-state-${myStateVersion}`,
-  initialValue: useRealtimeState(`my-state-${myStateVersion - 1}`).then(s => s || veryFirstValue),
+  initialValue: getRealtimeState(`my-state-${myStateVersion - 1}`).then(s => s || veryFirstValue), // the initial value of the new version is the last value of the previous version
   ...
 })
 ```
@@ -197,7 +230,7 @@ const myStateMigrations = {
 }
 useRealtimeReducer({
   name: `my-state-${myStateVersion}`,
-  initialValue: useRealtimeState(`my-state-${myStateVersion - 1}`).then(s => myStateMigrations[myStateVersion] ? myStateMigrations[myStateVersion](s) : s),
+  initialValue: getRealtimeState(`my-state-${myStateVersion - 1}`).then(s => myStateMigrations[myStateVersion] ? myStateMigrations[myStateVersion](s) : s),
   ...
 })
 ```
@@ -218,9 +251,9 @@ Most importantly, this gives you access to the logged-in user's id `uid`, which 
 
 ## Authorization & Access Control
 
-Once you have a user logged in, you can add the `uid` field to any action you emit to a reducer. Then, in the reducer function, you can trust that the author of that action has that `uid`.
+Once you have a user logged in, you can add the `uid` (user id) field to any action you dispatch to a reducer. Then, in the reducer function, you can trust that the author of that action has that `uid`.
 
-In other words, we enforce (via Firebase Security Rules) that the `uid` field on all incoming actions corresponds to that of the user emitting the action. This can't be forged.
+In other words, we enforce (via Firebase Security Rules) that the `uid` field on all incoming actions corresponds to that of the user dispatching the action. This can't be forged.
 
 So any other security validation (enforcing uniqueness, enforcing ownership of resources) happens _inside_ the reducer. This means that you don't have to mess with Firebase's Security Rules: you can handle all that logic in your `useRealtimeReducer` hook.
 
@@ -255,7 +288,7 @@ const useMessages = useRealtimeReducer<Message[] | null, MessageAction, MessageE
   initialValue: [],
   loadingValue: null,
   reducer: (messages, action, resolve) => {
-    if (action.type === 'NEW_MESSAGE') {
+    if (action.type === 'NewMessage') {
       if (action.newMessage.body.length < 240) {
         if (action.uid == action.newMessage.uid) {
           return [...messages, action.newMessage];
@@ -268,7 +301,7 @@ const useMessages = useRealtimeReducer<Message[] | null, MessageAction, MessageE
         return messages;
       }
     } else if (action.type === "DeleteMessage") {
-      const message = messages.find({id} => action.id === id)
+      const message = messages.find(({id}) => action.id === id)
       if (!message) {
         resolve('Message not found to delete')
         return messages
@@ -276,7 +309,7 @@ const useMessages = useRealtimeReducer<Message[] | null, MessageAction, MessageE
         resolve('User is not authorized to delete this message')
         return messages
       else {
-        return messages.filter({id} => action.id !== id)
+        return messages.filter(({id}) => action.id !== id)
       }
     }
   }

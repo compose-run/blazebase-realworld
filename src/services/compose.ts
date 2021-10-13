@@ -394,19 +394,19 @@ function realtimeReducer<A, B, C>(
   }
 }
 
-export function useRealtimeReducer<A, B, C>({
+export function useRealtimeReducer<State, Action, Message>({
   name,
   initialValue,
   reducer,
   loadingValue,
 }: {
   name: string;
-  initialValue: A | Promise<A>;
-  reducer: (acc: A, curr: B, resolver?: (c: C) => void) => A;
-  loadingValue: A;
-}): [A, (b: B) => Promise<C>] {
+  initialValue: State | Promise<State>;
+  reducer: (state: State, action: Action, resolve?: (message: Message) => void) => State;
+  loadingValue: State;
+}): [State, (b: Action) => Promise<Message>] {
   const [realtimeContext, emitEvent] = useReducerSafe(
-    (context: RealtimeReducerContext<A, B>, event: RealtimeEvent<A, B>) =>
+    (context: RealtimeReducerContext<State, Action>, event: RealtimeEvent<State, Action>) =>
       realtimeReducer(name, reducer, initialValue, loadingValue, context, event),
     {
       currentValue: loadingValue,
