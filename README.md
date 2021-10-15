@@ -88,7 +88,12 @@ export default function ChatApp() {
   const [message, setMessage] = useState('');
 
   // realtime & persistent via blazebase
-  const [messages, newMessage] = useRealtimeReducer('steves-chat-app-4', (state, action) => acc.concat([action]), []);
+  const [messages, newMessage] = useRealtimeReducer({
+    name: 'steves-chat-app-4', 
+    reducer: (messages, message) => messages.concat([message]), 
+    initialValue: [],
+    loadingValue: null,
+  });
 
   return (
     <div>
