@@ -1,8 +1,8 @@
 {
   "files": {
     "main.css": "/blazebase-realworld/static/css/main.afd7172b.chunk.css",
-    "main.js": "/blazebase-realworld/static/js/main.8c69ceba.chunk.js",
-    "main.js.map": "/blazebase-realworld/static/js/main.8c69ceba.chunk.js.map",
+    "main.js": "/blazebase-realworld/static/js/main.f6ce5f20.chunk.js",
+    "main.js.map": "/blazebase-realworld/static/js/main.f6ce5f20.chunk.js.map",
     "runtime-main.js": "/blazebase-realworld/static/js/runtime-main.e5418cdf.js",
     "runtime-main.js.map": "/blazebase-realworld/static/js/runtime-main.e5418cdf.js.map",
     "static/js/2.ed53a947.chunk.js": "/blazebase-realworld/static/js/2.ed53a947.chunk.js",
@@ -15,6 +15,6 @@
     "static/js/runtime-main.e5418cdf.js",
     "static/js/2.ed53a947.chunk.js",
     "static/css/main.afd7172b.chunk.css",
-    "static/js/main.8c69ceba.chunk.js"
+    "static/js/main.f6ce5f20.chunk.js"
   ]
 }
