@@ -15,6 +15,7 @@ import {
   getDocs,
   setDoc,
   Timestamp,
+  Unsubscribe,
 } from 'firebase/firestore';
 import { getAuth, onAuthStateChanged, User as FirebaseUser } from 'firebase/auth';
 
@@ -394,6 +395,14 @@ function realtimeReducer<A, B, C>(
   }
 }
 
+const realtimeReducers: {
+  [name: string]: {
+    context: RealtimeReducerContext<unknown, unknown>;
+    eventEmitters: Set<Dispatch<RealtimeEvent<unknown, unknown>>>;
+    unsubscribe?: Unsubscribe;
+  };
+} = {};
+
 export function useRealtimeReducer<State, Action, Message>({
   name,
   initialValue,
@@ -423,66 +432,69 @@ export function useRealtimeReducer<State, Action, Message>({
     []
   );
 
-  // confirm reducer and initial values are the same as the initial ones
-  // useEffect(() => {
-  //   getDoc(doc(db, 'behaviors-reducers', name)).then((snapshot) => {
-  //     if (snapshot.exists()) {
-  //       const { reducerCode, initial } = snapshot.data();
-  //       if (reducerCode !== reducer.toString()) {
-  //         emitEvent({
-  //           kind: 'MismatchedReducerEvent',
-  //         });
-  //         throw new Error(
-  //           `The reducer supplied to ${name} does not exactly match the reducer initially supplied. Bump the name and migrate over data from ${name} to create a new reducer.`
-  //         );
-  //       }
-  //       if (
-  //         !isPromise(initialValue) && // todo - find a way to provide this warning for promises
-  //         !equals(initial, initialValue)
-  //       ) {
-  //         console.warn(`Initial value supplied to reducer ${name} is ignored because initial value already found`);
-  //       }
-  //     }
-  //   });
-  // }, [name, initialValue, reducer, emitEvent]);
-
   // get initial behavior from firebase cache
   useEffect(() => {
-    const initialBehaviorFromCacheQuery = query(
-      collection(db, 'behaviors', name, 'values'),
-      orderBy('ts', 'desc'),
-      limit(1)
-    );
-    getDocs(initialBehaviorFromCacheQuery).then((querySnapshot) => {
-      const doc = querySnapshot.docs[0];
-      if (!doc) {
-        emitEvent({ kind: 'CacheEmptyEvent' });
-      } else if (!doc.metadata.hasPendingWrites) {
-        emitEvent({
-          kind: 'CacheLoadedEvent',
-          currentValue: doc.data().value,
-          ts: doc.data().ts,
-        });
-      }
-    });
+    if (realtimeReducers[name] && realtimeReducers[name].context.kind === 'SetFromCacheOrReduction') {
+      emitEvent({
+        kind: 'CacheLoadedEvent',
+        currentValue: realtimeReducers[name].context.currentValue as State,
+        ts: realtimeReducers[name].context.ts, // not sure why there's a type error here
+      });
+    } else {
+      const initialBehaviorFromCacheQuery = query(
+        collection(db, 'behaviors', name, 'values'),
+        orderBy('ts', 'desc'),
+        limit(1)
+      );
+      getDocs(initialBehaviorFromCacheQuery).then((querySnapshot) => {
+        const doc = querySnapshot.docs[0];
+        if (!doc) {
+          emitEvent({ kind: 'CacheEmptyEvent' });
+        } else if (!doc.metadata.hasPendingWrites) {
+          emitEvent({
+            kind: 'CacheLoadedEvent',
+            currentValue: doc.data().value,
+            ts: doc.data().ts,
+          });
+        }
+      });
+    }
   }, [name, emitEvent]);
 
   // subscribe to all new stream events to reduce upon
   useEffect(() => {
-    const newStreamEventsQuery = query(collection(db, 'streams', name, 'values'), orderBy('ts', 'desc'), limit(1));
-    // It seems like this line might not be unsubscribing properly for React
-    // sometimes it causes a memory leak warning, but it may be a race condition
-    return onSnapshot(newStreamEventsQuery, (querySnapshot) => {
-      const doc = querySnapshot.docs[0];
-      if (doc && !doc.metadata.hasPendingWrites) {
-        emitEvent({
-          kind: 'ReductionEvent',
-          value: doc.data().value,
-          ts: doc.data().ts,
-          id: doc.data().id,
-        });
-      }
-    });
+    if (realtimeReducers[name]) {
+      realtimeReducers[name].eventEmitters.add(emitEvent);
+      return () => {
+        realtimeReducers[name].eventEmitters.delete(emitEvent);
+        if (realtimeReducers[name].eventEmitters.size === 0) {
+          realtimeReducers[name].unsubscribe();
+          delete realtimeReducers[name];
+        }
+      };
+    } else {
+      realtimeReducers[name] = { context: realtimeContext, eventEmitters: new Set([emitEvent]) };
+
+      const newStreamEventsQuery = query(collection(db, 'streams', name, 'values'), orderBy('ts', 'desc'), limit(1));
+      // It seems like this line might not be unsubscribing properly for React
+      // sometimes it causes a memory leak warning, but it may be a race condition
+      const unsubscribe = onSnapshot(newStreamEventsQuery, (querySnapshot) => {
+        const doc = querySnapshot.docs[0];
+        if (doc && !doc.metadata.hasPendingWrites) {
+          realtimeReducers[name].eventEmitters.forEach((emitter) =>
+            emitter({
+              kind: 'ReductionEvent',
+              value: doc.data().value,
+              ts: doc.data().ts,
+              id: doc.data().id,
+            })
+          );
+        }
+      });
+
+      realtimeReducers[name].unsubscribe = unsubscribe;
+      return () => 1; // don't unsubscribe here
+    }
   }, [name, emitEvent]);
 
   return [realtimeContext.currentValue, (value) => emitWithResponse(name, value)];
