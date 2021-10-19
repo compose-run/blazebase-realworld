@@ -19,6 +19,28 @@ import {
 } from 'firebase/firestore';
 import { getAuth, onAuthStateChanged, User as FirebaseUser } from 'firebase/auth';
 
+/**
+ * @license Use of this source code is governed by an MIT-style license that
+ * can be found in the LICENSE file at https://github.com/cartant/firebase-key
+ */
+
+export function encode(component: string): string {
+  // Note that exclamation marks are used. The standard encoding mechansim
+  // that uses percentage characters doesn't play nice with the REST URLs
+  // and the Firebase console (at least) breaks.
+
+  return component.replace(/[\/\.\$\[\]#!]/g, (match) => `!${match.charCodeAt(0).toString(16).toUpperCase()}`);
+}
+
+/**
+ * @license Use of this source code is governed by an MIT-style license that
+ * can be found in the LICENSE file at https://github.com/cartant/firebase-key
+ */
+
+export function decode(component: string): string {
+  return component.replace(/!([0-9a-f]{2})/gi, (match, code) => String.fromCharCode(parseInt(code, 16)));
+}
+
 // TODO - will need to find a way for users to supply their own firebase credentials
 const firebaseConfig = {
   apiKey: 'AIzaSyDZtMhc933h53_fbJFmyM76Mh6aRreHZE8',
@@ -93,7 +115,7 @@ export const emit = async <A>(
   id?: number // how we tie together an emitted event and the reducer's response
 ) => {
   try {
-    await addDoc(collection(db, type, name, 'values'), {
+    await addDoc(collection(db, type, encode(name), 'values'), {
       value,
       ts: ts || serverTimestamp(),
       id,
@@ -138,7 +160,7 @@ function getCachedBehaviorLocalStorage(name: string) {
 
 export const getRealtimeState = async (name: string) => {
   const initialBehaviorFromCacheQuery = query(
-    collection(db, 'behaviors', name, 'values'),
+    collection(db, 'behaviors', encode(name), 'values'),
     orderBy('ts', 'desc'),
     limit(1)
   );
@@ -153,7 +175,7 @@ export const getRealtimeState = async (name: string) => {
 // save the reducer code to firebase so we can ensure all reducers
 // with the same name are identical
 function saveReducer<A>(name: string, reducerCode: string, initial: A) {
-  setDoc(doc(db, 'behaviors-reducers', name), {
+  setDoc(doc(db, 'behaviors-reducers', encode(name)), {
     reducerCode,
     initial,
   });
@@ -442,7 +464,7 @@ export function useRealtimeReducer<State, Action, Message>({
       });
     } else {
       const initialBehaviorFromCacheQuery = query(
-        collection(db, 'behaviors', name, 'values'),
+        collection(db, 'behaviors', encode(name), 'values'),
         orderBy('ts', 'desc'),
         limit(1)
       );
@@ -475,7 +497,11 @@ export function useRealtimeReducer<State, Action, Message>({
     } else {
       realtimeReducers[name] = { context: realtimeContext, eventEmitters: new Set([emitEvent]) };
 
-      const newStreamEventsQuery = query(collection(db, 'streams', name, 'values'), orderBy('ts', 'desc'), limit(1));
+      const newStreamEventsQuery = query(
+        collection(db, 'streams', encode(name), 'values'),
+        orderBy('ts', 'desc'),
+        limit(1)
+      );
       // It seems like this line might not be unsubscribing properly for React
       // sometimes it causes a memory leak warning, but it may be a race condition
       const unsubscribe = onSnapshot(newStreamEventsQuery, (querySnapshot) => {
