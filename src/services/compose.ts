@@ -438,7 +438,7 @@ export function useRealtimeReducer<State, Action, Message>({
       emitEvent({
         kind: 'CacheLoadedEvent',
         currentValue: realtimeReducers[name].context.currentValue as State,
-        ts: realtimeReducers[name].context.ts, // not sure why there's a type error here
+        ts: (realtimeReducers[name].context as SetFromCacheOrReduction<unknown>).ts,
       });
     } else {
       const initialBehaviorFromCacheQuery = query(
