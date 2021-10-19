@@ -31,7 +31,6 @@ export function Register() {
         type: 'SIGN_UP',
         user: {
           username: user.username,
-          email: user.email,
           uid,
           bio: null,
           image: null,

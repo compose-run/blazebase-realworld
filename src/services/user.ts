@@ -2,21 +2,21 @@ import { equals } from 'ramda';
 import { getRealtimeState, useFirebaseUser, useRealtimeReducer } from '../services/compose';
 import { GenericErrors } from '../types/error';
 import { Profile } from '../types/profile';
-import { User, UId } from '../types/user';
+import { UId, PublicUser } from '../types/user';
 
 interface SignUpUserAction {
   type: 'SIGN_UP';
-  user: User;
+  user: PublicUser;
 }
 interface UpdateUserAction {
   type: 'UPDATE';
-  newUser: User;
+  newUser: PublicUser;
   uid: UId;
 }
 
 type UserAction = SignUpUserAction | UpdateUserAction;
 
-type UserDB = User[];
+type UserDB = PublicUser[];
 
 const usersVersion = 111;
 export const useUsers = () =>
@@ -27,14 +27,8 @@ export const useUsers = () =>
     reducer: (users, action, resolve) => {
       const errors = {};
       if (action.type === 'SIGN_UP') {
-        if (users.some((u) => u.email === action.user.email)) {
-          errors['email'] = 'already in use';
-        }
         if (users.some((u) => u.username === action.user.username)) {
           errors['username'] = 'already in use';
-        }
-        if (users.some((u) => u.uid === action.user.uid)) {
-          errors['public-key'] = 'already in use';
         }
         if (!Object.keys(errors).length) {
           users = users.concat([action.user]);

@@ -6,11 +6,6 @@ export interface PublicUser {
   image: string | null;
   uid: UId;
 }
-
-export interface User extends PublicUser {
-  email: string;
-}
-
 export interface UserSettings extends PublicUser {
   email: string;
   password: string | null;

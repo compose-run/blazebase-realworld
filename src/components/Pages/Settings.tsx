@@ -38,9 +38,7 @@ export function Settings() {
 
     setUpdating(true);
 
-    if (oldUser.email !== newUser.email) {
-      updateEmail(firebaseUser, newUser.email);
-    }
+    updateEmail(firebaseUser, newUser.email);
 
     const errors = await emitUserAction({
       type: 'UPDATE',

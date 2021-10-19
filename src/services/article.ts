@@ -2,7 +2,7 @@ import { useProfiles, useUser, useUsers } from './user';
 import { emitWithResponse, getRealtimeState, useRealtimeReducer } from '../services/compose';
 import { GenericErrors } from '../types/error';
 import { Article, ArticleForEditor } from '../types/article';
-import { User, UId } from '../types/user';
+import { PublicUser, UId } from '../types/user';
 import { uniq } from 'ramda';
 
 type Slug = string;
@@ -285,7 +285,7 @@ export interface Comment {
   slug: Slug;
   commentId: number;
   createdAt: Date;
-  author: User;
+  author: PublicUser;
 }
 
 type CommentsDB = Comment[];
@@ -300,7 +300,7 @@ export const useArticleComments = (): CommentsDB => {
     comments.map((comment) => ({
       ...comment,
       createdAt: new Date(comment.createdAt),
-      author: users.find((u: User) => u.uid === comment.uid),
+      author: users.find((u: PublicUser) => u.uid === comment.uid),
     }))
   );
 };

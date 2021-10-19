@@ -1,7 +1,7 @@
 import { Fragment } from 'react';
 import { HashRouter, NavLink } from 'react-router-dom';
 import { useUser } from '../services/user';
-import { User } from '../types/user';
+import { PublicUser } from '../types/user';
 import { Link } from 'react-router-dom';
 
 export function Header() {
@@ -45,7 +45,7 @@ function GuestLinks() {
   );
 }
 
-function UserLinks({ user: { username } }: { user: User }) {
+function UserLinks({ user: { username } }: { user: PublicUser }) {
   return (
     <Fragment>
       <NavItem text='New Article' href='/editor' icon='ion-compose' />

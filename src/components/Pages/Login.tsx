@@ -3,14 +3,11 @@ import React, { useState } from 'react';
 import { buildGenericFormField } from './../../types/genericFormField';
 import { GenericForm } from './../GenericForm';
 import { ContainerPage } from './../ContainerPage';
-import { useUsers } from '../../services/user';
 import { firebaseAuth } from '../../services/compose';
 import { redirect } from '../../types/location';
 import { Link } from 'react-router-dom';
 
 export function Login() {
-  const [users] = useUsers();
-
   const [loggingIn, setLoggingIn] = useState(false);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -21,18 +18,12 @@ export function Login() {
 
     setLoggingIn(true);
 
-    const user = users && users.find((u) => u.email === email);
-    if (!user) {
-      setErrors({ email: ['not found'] });
-      setLoggingIn(false);
-      return;
-    }
-
     try {
-      await signInWithEmailAndPassword(firebaseAuth, user.email, password);
+      await signInWithEmailAndPassword(firebaseAuth, email, password);
       redirect('');
     } catch (e) {
-      setErrors({ login: [e.message] });
+      setErrors({ login: e.message });
+      setLoggingIn(false);
     }
 
     setLoggingIn(false);

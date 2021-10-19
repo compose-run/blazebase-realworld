@@ -5,7 +5,7 @@ import { Article } from './../../types/article';
 import { redirect } from './../../types/location';
 import { classObjectToClassName } from './../../types/style';
 import { useFollowers, useUser } from './../../services/user';
-import { User } from './../../types/user';
+import { PublicUser } from './../../types/user';
 import { TagList } from './../ArticlePreview';
 import {
   useArticleComments,
@@ -249,7 +249,7 @@ function CommentSection({ article }: { article: Article }) {
   );
 }
 
-function CommentForm({ user: { image, uid }, slug }: { user: User; slug: string }) {
+function CommentForm({ user: { image, uid }, slug }: { user: PublicUser; slug: string }) {
   const [body, setBody] = useState('');
   const [submittingComment, setSubmitting] = useState(false);
   const [, emitCommentAction] = useArticleCommentsDB();
@@ -302,7 +302,7 @@ function ArticleComment({
   comment: Comment;
   slug: string;
   index: number;
-  user: User;
+  user: PublicUser;
 }) {
   const { username, image } = author || {};
 
