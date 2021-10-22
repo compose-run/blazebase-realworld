@@ -89,11 +89,12 @@ All in JavaScript! Reduce your actions in JavaScript -- which runs on our server
 **Beware: Compose is not ready for public use.**
 
 1. Currently, there is no proper NPM package, so simply to copy the [compose.ts](https://github.com/compose-run/realworld/blob/main/src/services/compose.ts) somewhere into your project.
+2. `npm install --save firebase` (and `react` if you haven't already)
 
 That's it! If you want to use your own personal Firebase account, there are two extra steps:
 
-2. Replace [our Firebase credentials](https://github.com/compose-run/realworld/blob/main/src/services/compose.ts#L45-L53) with your own from the Firebase Console.
-3. Add the following Security Rules to your Firestore database to protect the `uid` field on actions:
+3. Replace [our Firebase credentials](https://github.com/compose-run/realworld/blob/main/src/services/compose.ts#L45-L53) with your own from the Firebase Console.
+4. Add the following Security Rules to your Firestore database to protect the `uid` field on actions:
 
 ```
 rules_version = '2';
