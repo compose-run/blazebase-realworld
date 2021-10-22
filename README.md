@@ -1,9 +1,3 @@
-# ComposeJS implementation of the [RealWorld](https://github.com/gothinkster/realworld) spec
-
-## [Live demo](https://compose-run.github.io/realworld/#/)
-
-This codebase was created to demonstrate a fully fledged fullstack application built with React, Typescript, and ComposeJS.
-
 # ComposeJS
 
 _Build fullstack apps without leaving your React Component_
@@ -28,9 +22,9 @@ export default function ChatApp() {
 
   // realtime & persistent via compose
   const [messages, newMessage] = useRealtimeReducer({
-    name: 'steves-chat-app-4',
-    reducer: (messages, message) => messages.concat([message]),
+    name: 'messages',
     initialValue: [],
+    reducer: (messages, message) => [...messages, message],
   });
 
   return (
@@ -125,121 +119,6 @@ service cloud.firestore {
 }
 ```
 
-## API
-
-### `useRealtimeReducer`
-
-This is the core ComposeJS function. It is a realtime and persistent version of the built-in `useReducer` React hook. Like `useReducer` it takes an `initialValue` and a `reducer` (as keyword arguments), but it also accepts a `name` to uniquely identify the persistent state.
-
-```ts
-function useRealtimeReducer<State, Action, Message>({
-  name,
-  initialValue,
-  reducer,
-}: {
-  name: string;
-  initialValue: State | Promise<State>;
-  reducer: (state: State, action: Action, resolve?: (message: Message) => void) => State;
-}): [State | undefined, (action: Action) => Promise<Message>];
-```
-
-It returns an array. The first value represents the realtime, persistent state. The second is a function which allows you to dispatch values ("actions" in Redux terminology) to the reducer.
-
-Unlike the local hook, `useRealtimeReducer` dispatches all actions to a server which timestamps them and runs your reducer function. Any state changes are beamed back to each client node efficiently as diffs.
-
-In development mode, the reducer runs locally every user's browser. When you build your application, ComposeJS automatically pulls out your reducer functions into separate files to be deployed as Google Cloud or Lambda Functions.
-
-`useRealtimeReducer` provides a way for the reducer to communicate directly back to the action dispatcher. This can useful when the frontend waits on a reducer to confirm or reject an action. For example, when a user picks a name that needs to be unique, your app can `await dispatcher(someAction)` for success or rejection message. You can send these messages back to dispatchers by having your reducer accept a third argument: a `resolve` function. In the reducer, you can `resolve(someMessage)` which will resolve the Promise for the dispatcher of that action.
-
-It is considered good practice to make reducers deterministic. When you use `Date.now` or `Math.random()`, do it on the client and dispatch those non-deterministic values to the reducer.
-
-#### Example Usage
-
-```ts
-interface Message {
-  body: string;
-  createdAt: number;
-}
-
-interface NewMessage {
-  type: 'NewMessage';
-  newMessage: Message;
-}
-
-type MessageAction = NewMessage;
-
-type MessageError = string;
-
-const useMessages = useRealtimeReducer<Message[], MessageAction, MessageError>({
-  name: 'messages',
-  initialValue: [],
-  reducer: (oldValue, action, resolve) => {
-    if (action.type === 'NewMessage') {
-      if (action.newMessage.body.length < 240) {
-        return [...oldValue, action.newMessage];
-      } else {
-        resolve('Message too long');
-        return oldValue;
-      }
-    }
-  },
-});
-```
-
-### `getRealtimeState<A>(name: string): Promise<State | null>`
-
-`getRealtimeState` accepts a realtime state name and returns a Promise with it's value.
-
-It can be useful to spy the current value of some state:
-
-```ts
-getRealtimeState('my-state-1').then(console.log);
-```
-
-It is also useful in migrations. More on this in the **Migrations** sections below.
-
-## Migrations
-
-Realtime reducers are _immutable_ in the sense that once created, can _never be redefined or arbitrarily mutated_. Any state change is fully described in the reducer function.
-
-This is inspired by immutability in functional programming, one of the core abstractions in React. While we of course need data to _change over time_, we want to model that reactivity immutably. Unlike a database, which is a big blob of mutable state, which any part of your app can mutate in any way at any time, all persistent state in ComposeJS is defined once and only once, and cannot be mutated from anywhere. Only its predefined actions can affect it, in the ways predefined by its reducer.
-
-Thus: the question of migration. In a normal database app, migrations happen whenever the schema changes. In ComposeJS, migrations happen whenever either the schema _or_ the reducer function changes.
-
-However, a simple migration without a schema change is easy: just want to migrate over all the data. This is how you set it up:
-
-1. Create a version number for a piece or group of pieces of related state
-2. Put that version number in the state's name
-3. Set the initial state to the previous version's state - 1
-4. Handle the base case (where `useRealtimeState` returns `null`) by providing an _initial_ initial value
-
-```ts
-const veryFirstValue = []
-const myStateVersion = 0 // increment this number to migrate the data
-useRealtimeReducer({
-  name: `my-state-${myStateVersion}`,
-  initialValue: getRealtimeState(`my-state-${myStateVersion - 1}`).then(s => s || veryFirstValue), // the initial value of the new version is the last value of the previous version
-  ...
-})
-```
-
-In the case where you need to make a more traditional migration because of a schema change, you can include that logic, and then return to the versioning scheme:
-
-```ts
-const veryFirstValue = []
-const myStateVersion = 11
-const myStateMigrations = {
-  11: (oldState) => { ... }
-}
-useRealtimeReducer({
-  name: `my-state-${myStateVersion}`,
-  initialValue: getRealtimeState(`my-state-${myStateVersion - 1}`).then(s => myStateMigrations[myStateVersion] ? myStateMigrations[myStateVersion](s) : s),
-  ...
-})
-```
-
-A similar scheme can be used for creating forks of your realtime state for working in git branches.
-
 ## Authentication
 
 Authentication is handled by Firebase. They have email & password, magic link, Facebook, Twitter, and many other authentication methods.
@@ -322,9 +201,84 @@ const useMessages = useRealtimeReducer<Message[], MessageAction, MessageError>({
 
 Currently all data in ComposeJS is public, but we are working on a way to add this capability.
 
-For more information on how this works with other frontends/backends, head over to the [RealWorld](https://github.com/gothinkster/realworld) repo.
+## API
 
-# How it works
+### `useRealtimeReducer`
+
+This is the core ComposeJS function. It is a realtime and persistent version of the built-in `useReducer` React hook. Like `useReducer` it takes an `initialValue` and a `reducer` (as keyword arguments), but it also accepts a `name` to uniquely identify the persistent state.
+
+```ts
+function useRealtimeReducer<State, Action, Message>({
+  name,
+  initialValue,
+  reducer,
+}: {
+  name: string;
+  initialValue: State | Promise<State>;
+  reducer: (state: State, action: Action, resolve?: (message: Message) => void) => State;
+}): [State | undefined, (action: Action) => Promise<Message>];
+```
+
+It returns an array. The first value represents the realtime, persistent state. The second is a function which allows you to dispatch values ("actions" in Redux terminology) to the reducer.
+
+Unlike the local hook, `useRealtimeReducer` dispatches all actions to a server which timestamps them and runs your reducer function. Any state changes are beamed back to each client node efficiently as diffs.
+
+In development mode, the reducer runs locally every user's browser. When you build your application, ComposeJS automatically pulls out your reducer functions into separate files to be deployed as Google Cloud or Lambda Functions.
+
+`useRealtimeReducer` provides a way for the reducer to communicate directly back to the action dispatcher. This can useful when the frontend waits on a reducer to confirm or reject an action. For example, when a user picks a name that needs to be unique, your app can `await dispatcher(someAction)` for success or rejection message. You can send these messages back to dispatchers by having your reducer accept a third argument: a `resolve` function. In the reducer, you can `resolve(someMessage)` which will resolve the Promise for the dispatcher of that action.
+
+It is considered good practice to make reducers deterministic. When you use `Date.now` or `Math.random()`, do it on the client and dispatch those non-deterministic values to the reducer.
+
+#### Example Usage
+
+```ts
+interface Message {
+  body: string;
+  createdAt: number;
+}
+
+interface NewMessage {
+  type: 'NewMessage';
+  newMessage: Message;
+}
+
+type MessageAction = NewMessage;
+
+type MessageError = string;
+
+const useMessages = useRealtimeReducer<Message[], MessageAction, MessageError>({
+  name: 'messages',
+  initialValue: [],
+  reducer: (oldValue, action, resolve) => {
+    if (action.type === 'NewMessage') {
+      if (action.newMessage.body.length < 240) {
+        return [...oldValue, action.newMessage];
+      } else {
+        resolve('Message too long');
+        return oldValue;
+      }
+    }
+  },
+});
+```
+
+### `getRealtimeState<A>(name: string): Promise<State | null>`
+
+`getRealtimeState` accepts a realtime state name and returns a Promise with it's value.
+
+It can be useful to spy the current value of some state:
+
+```ts
+getRealtimeState('my-state-1').then(console.log);
+```
+
+## Folder structure
+
+This codebase was created to demonstrate a fully fledged fullstack application built with React, Typescript, and ComposeJS.
+
+[Compose Realworld Live Demo](https://compose-run.github.io/realworld/#/)
+
+This repo was forked from [ts-redux-react-realworld-example-app](https://github.com/angelguzmaning/ts-redux-react-realworld-example-app) by [@angelguzmaning](https://github.com/angelguzmaning), which was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
 
 The root of the application is the `src/components/App` component. The App component uses react-router's HashRouter to display the different pages. Each page is represented by a [function component](https://reactjs.org/docs/components-and-props.html).
 
@@ -339,18 +293,12 @@ The code avoids runtime type-related errors by using Typescript and decoders for
 
 This project uses prettier and eslint to enforce a consistent code syntax.
 
-## Folder structure
-
 - `src/components` Contains all the functional components.
 - `src/components/Pages` Contains the components used by the router as pages.
 - `src/state` Contains redux related code.
 - `src/services` Contains the code that interacts with external systems (ComposeJS).
 - `src/types` Contains type definitions alongside the code related to those types.
 - `src/config` Contains configuration files.
-
-# Getting started
-
-This project was forked from [ts-redux-react-realworld-example-app](https://github.com/angelguzmaning/ts-redux-react-realworld-example-app) by [@angelguzmaning](https://github.com/angelguzmaning), which was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
 
 ## Available Scripts
 
