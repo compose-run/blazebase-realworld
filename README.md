@@ -92,7 +92,6 @@ export default function ChatApp() {
     name: 'steves-chat-app-4',
     reducer: (messages, message) => messages.concat([message]),
     initialValue: [],
-    loadingValue: null,
   });
 
   return (
@@ -132,20 +131,18 @@ Blazebase isn't currently ready public use. Contact steve@compose.run if you're 
 
 ### `useRealtimeReducer`
 
-This is the core Blazebase function. It is a realtime and persistent version of the built-in `useReducer` React hook. Like `useReducer` it takes an `initialValue` and a `reducer` (as keyword arguments), but it also accepts a couple of extra parameters necessary for realtime persistence: `name` to uniquely identify the persistent state and `loadingValue` to be used during the initial load of state.
+This is the core Blazebase function. It is a realtime and persistent version of the built-in `useReducer` React hook. Like `useReducer` it takes an `initialValue` and a `reducer` (as keyword arguments), but it also accepts a `name` to uniquely identify the persistent state.
 
 ```ts
 function useRealtimeReducer<State, Action, Message>({
   name,
   initialValue,
   reducer,
-  loadingValue,
 }: {
   name: string;
   initialValue: State | Promise<State>;
   reducer: (state: State, action: Action, resolve?: (message: Message) => void) => State;
-  loadingValue: State;
-}): [State, (action: Action) => Promise<Message>];
+}): [State | undefined, (action: Action) => Promise<Message>];
 ```
 
 It returns an array. The first value represents the realtime, persistent state. The second is a function which allows you to dispatch values ("actions" in Redux terminology) to the reducer.
@@ -175,10 +172,9 @@ type MessageAction = NewMessage;
 
 type MessageError = string;
 
-const useMessages = useRealtimeReducer<Message[] | null, MessageAction, MessageError>({
+const useMessages = useRealtimeReducer<Message[], MessageAction, MessageError>({
   name: 'messages',
   initialValue: [],
-  loadingValue: null,
   reducer: (oldValue, action, resolve) => {
     if (action.type === 'NewMessage') {
       if (action.newMessage.body.length < 240) {
@@ -273,7 +269,7 @@ interface Message {
   body: string;
   createdAt: number;
   uid: UId;
-  id: string;
+  id: Id;
 }
 
 interface NewMessage {
@@ -292,10 +288,9 @@ type MessageAction = NewMessage | DeleteMessage;
 
 type MessageError = string;
 
-const useMessages = useRealtimeReducer<Message[] | null, MessageAction, MessageError>({
+const useMessages = useRealtimeReducer<Message[], MessageAction, MessageError>({
   name: 'messages',
   initialValue: [],
-  loadingValue: null,
   reducer: (messages, action, resolve) => {
     if (action.type === 'NewMessage') {
       if (action.newMessage.body.length < 240) {

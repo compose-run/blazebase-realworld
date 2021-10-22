@@ -23,7 +23,6 @@ export const useUsers = () =>
   useRealtimeReducer<UserDB, UserAction, GenericErrors>({
     name: `conduit-users-${usersVersion}`,
     initialValue: getRealtimeState(`conduit-users-${usersVersion - 1}`),
-    loadingValue: null,
     reducer: (users, action, resolve) => {
       const errors = {};
       if (action.type === 'SIGN_UP') {
@@ -63,10 +62,9 @@ type Follower = { leader: UId; follower: UId };
 type FollowersDB = Follower[];
 
 export const useFollowers = () =>
-  useRealtimeReducer<FollowersDB | null, FollowUserAction, GenericErrors>({
+  useRealtimeReducer<FollowersDB, FollowUserAction, GenericErrors>({
     name: `conduit-followers-${usersVersion}`,
     initialValue: getRealtimeState(`conduit-followers-${usersVersion - 1}`).then((s) => s || []),
-    loadingValue: null,
     reducer: (userFollowers, action, resolve) => {
       const { follower, leader } = action;
 

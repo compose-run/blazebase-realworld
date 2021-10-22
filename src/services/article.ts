@@ -50,7 +50,6 @@ export const useArticlesDB = () =>
   useRealtimeReducer<ArticleDB[], ArticleAction, ArticleResolve>({
     name: `conduit-articles-${articlesVersion}`,
     initialValue: getRealtimeState(`conduit-articles-${articlesVersion - 1}`).then((s) => s || []),
-    loadingValue: null,
     reducer: (articles, action, resolve) => {
       const errors = {};
       if (action.uid) {
@@ -128,7 +127,6 @@ export const useArticleTags = () =>
   useRealtimeReducer<ArticleTag[], ArticleTagAction, GenericErrors>({
     name: `conduit-tags-${articlesVersion}`,
     initialValue: getRealtimeState(`conduit-tags-${articlesVersion - 1}`).then((s) => s || []),
-    loadingValue: null,
     reducer: (articleTagsOption, action, resolve) => {
       const errors = {};
       if (action.uid) {
@@ -171,7 +169,6 @@ export const useArticleFavorites = () =>
   useRealtimeReducer<ArticleFavoriteDB | null, FavoriteAction, GenericErrors>({
     name: `conduit-favorites-${articlesVersion}`,
     initialValue: getRealtimeState(`conduit-favorites-${articlesVersion - 1}`).then((s) => s || []),
-    loadingValue: null,
     reducer: (articleFavorites, action, resolve) => {
       const { slug, uid } = action;
       if (!uid) {
@@ -253,7 +250,6 @@ export const useArticleCommentsDB = () =>
   useRealtimeReducer<NormalizedCommentDB | null, CommentAction, CommentResolve>({
     name: `conduit-comments-${articlesVersion}`,
     initialValue: getRealtimeState(`conduit-comments-${articlesVersion - 1}`).then((s) => s || []),
-    loadingValue: null,
     reducer: (comments, action, resolve) => {
       if (!action.uid) {
         resolve({ errors: { unauthorized: 'to perform this action' } });

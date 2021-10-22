@@ -282,11 +282,10 @@ function realtimeReducer<A, B, C>(
   name: string,
   reducer: (acc: A, curr: B, resolver?: (c: C) => void) => A,
   initialValue: A | Promise<A>,
-  loadingValue: A,
   context: RealtimeReducerContext<A, B>,
   event: RealtimeEvent<A, B>
 ): RealtimeReducerContext<A, B> {
-  const cacheOrLoadingValue = getCachedBehaviorLocalStorage(name) || loadingValue;
+  const localStorageState = getCachedBehaviorLocalStorage(name);
   if (context.kind === 'MismatchedReducer') {
     return context;
   } else if (event.kind === 'MismatchedReducerEvent') {
@@ -299,13 +298,13 @@ function realtimeReducer<A, B, C>(
       return {
         emitToSelf: event.emitToSelf,
         pendingEvents: context.pendingEvents,
-        currentValue: cacheOrLoadingValue,
+        currentValue: localStorageState,
         kind: 'LoadingFromCache',
       };
     } else if (event.kind === 'ReductionEvent') {
       return {
         pendingEvents: context.pendingEvents.concat([event]),
-        currentValue: cacheOrLoadingValue,
+        currentValue: localStorageState,
         kind: 'LoadingEmitToSelf',
       };
     } else {
@@ -331,7 +330,7 @@ function realtimeReducer<A, B, C>(
           });
         });
         return {
-          currentValue: cacheOrLoadingValue,
+          currentValue: localStorageState,
           pendingEvents: context.pendingEvents,
           kind: 'LoadingFromPromise',
         };
@@ -339,7 +338,7 @@ function realtimeReducer<A, B, C>(
         saveReducer(name, reducer.toString(), initialValue);
         const newContext = context.pendingEvents.reduce(
           (context: RealtimeReducerContext<A, B>, event) =>
-            realtimeReducer(name, reducer, initialValue, loadingValue, context, event),
+            realtimeReducer(name, reducer, initialValue, context, event),
           {
             currentValue: initialValue as A,
             kind: 'SetFromInitialValue',
@@ -361,8 +360,7 @@ function realtimeReducer<A, B, C>(
     if (event.kind === 'InitialValuePromiseLoadedEvent') {
       saveReducer(name, reducer.toString(), event.currentValue);
       const newContext = context.pendingEvents.reduce(
-        (context: RealtimeReducerContext<A, B>, event) =>
-          realtimeReducer(name, reducer, initialValue, loadingValue, context, event),
+        (context: RealtimeReducerContext<A, B>, event) => realtimeReducer(name, reducer, initialValue, context, event),
         {
           currentValue: event.currentValue,
           kind: 'SetFromInitialValue',
@@ -373,7 +371,7 @@ function realtimeReducer<A, B, C>(
       return newContext;
     } else if (event.kind === 'ReductionEvent') {
       return {
-        currentValue: cacheOrLoadingValue,
+        currentValue: localStorageState,
         pendingEvents: context.pendingEvents.concat([event]),
         kind: 'LoadingFromPromise',
       };
@@ -429,18 +427,16 @@ export function useRealtimeReducer<State, Action, Message>({
   name,
   initialValue,
   reducer,
-  loadingValue,
 }: {
   name: string;
   initialValue: State | Promise<State>;
   reducer: (state: State, action: Action, resolve?: (message: Message) => void) => State;
-  loadingValue: State;
-}): [State, (b: Action) => Promise<Message>] {
+}): [State | undefined, (b: Action) => Promise<Message>] {
   const [realtimeContext, emitEvent] = useReducerSafe(
     (context: RealtimeReducerContext<State, Action>, event: RealtimeEvent<State, Action>) =>
-      realtimeReducer(name, reducer, initialValue, loadingValue, context, event),
+      realtimeReducer(name, reducer, initialValue, context, event),
     {
-      currentValue: loadingValue,
+      currentValue: undefined,
       pendingEvents: [],
       kind: 'LoadingEmitToSelf',
     }
