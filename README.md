@@ -1,8 +1,8 @@
-# Blazebase implementation of the [RealWorld](https://github.com/gothinkster/realworld) spec
+# ComposeJS implementation of the [RealWorld](https://github.com/gothinkster/realworld) spec
 
-## [Live demo](https://compose-run.github.io/blazebase-realworld/#/)
+## [Live demo](https://compose-run.github.io/realworld/#/)
 
-This codebase was created to demonstrate a fully fledged fullstack application built with React, Typescript, and Blazebase.
+This codebase was created to demonstrate a fully fledged fullstack application built with React, Typescript, and ComposeJS.
 
 For more information on how this works with other frontends/backends, head over to the [RealWorld](https://github.com/gothinkster/realworld) repo.
 
@@ -26,7 +26,7 @@ This project uses prettier and eslint to enforce a consistent code syntax.
 - `src/components` Contains all the functional components.
 - `src/components/Pages` Contains the components used by the router as pages.
 - `src/state` Contains redux related code.
-- `src/services` Contains the code that interacts with external systems (Blazebase).
+- `src/services` Contains the code that interacts with external systems (ComposeJS).
 - `src/types` Contains type definitions alongside the code related to those types.
 - `src/config` Contains configuration files.
 
@@ -62,32 +62,31 @@ The build is minified and the filenames include the hashes.
 
 ### `npm run deploy`
 
-This project is configured to be deployed to Github Pages, which works because the routing is hash-based and Blazebase is fully serverless.
+This project is configured to be deployed to Github Pages, which works because the routing is hash-based and ComposeJS is fully serverless.
 
-# Blazebase
+# ComposeJS
 
-_Add a little realtime & persistence to your React app_
+_Build fullstack apps without leaving your React Component_
 
-Blazebase is an experimental backend-as-a-service to provide realtime persistence to React apps.
+ComposeJS is an experimental backend-as-a-service to provide realtime persistence to React apps.
 
 ✅ &nbsp;Add to your app in 60 seconds  
 ✅ &nbsp;Authentication and realtime updates out-of-the-box  
-✅ &nbsp;No SQL, NoSQL, ORMs, query language: it's just React & JS on the backend  
+✅ &nbsp;No SQL, NoSQL, GraphQL, ORMs, or query language  
 ✅ &nbsp;Caching built-in for lightning-fast page loads  
-✅ &nbsp;Reusable Realtime React Components, which bring their data with them, and send updates back  
 ✅ &nbsp;Open-source. No lock-in.  
 ❌ &nbsp;Scalable  
 ❌ &nbsp;Battle-tested
-❌ &nbsp;Work Offline
+❌ &nbsp;Works Offline
 
 ```ts
 import { useState } from 'react';
-import { useRealtimeReducer } from 'blazebase';
+import { useRealtimeReducer } from 'compose';
 
 export default function ChatApp() {
   const [message, setMessage] = useState('');
 
-  // realtime & persistent via blazebase
+  // realtime & persistent via compose
   const [messages, newMessage] = useRealtimeReducer({
     name: 'steves-chat-app-4',
     reducer: (messages, message) => messages.concat([message]),
@@ -116,11 +115,11 @@ We try as much as possible to keep you in the flow of building your React fronte
 
 The main downside is that it currently doesn't scale particularly well. In other words, don't use this if you're building something real that needs to scale. We hope to solve this problem shortly, but we're focused on getting the DX right with small-data applications first. Think: hackathon or side project.
 
-Blazebase is a small, open-source wrapper around Firebase. This provides many services built-in, such as Authentication, Storage, Cloud Functions and more from the Firebase and Google Cloud platforms. Why use Blazebase over Firebase? Blazebase wraps Firebase in functional and reactive abstractions that better fit the React model.
+ComposeJS is a small, open-source wrapper around Firebase. This provides many services built-in, such as Authentication, Storage, Cloud Functions and more from the Firebase and Google Cloud platforms. Why use ComposeJS over Firebase? ComposeJS wraps Firebase in functional and reactive abstractions that better fit the React model.
 
 ## Install
 
-Blazebase isn't currently ready public use. Contact steve@compose.run if you're interested in giving it a spin.
+ComposeJS isn't currently ready public use. Contact steve@compose.run if you're interested in giving it a spin.
 
 ## Configuring
 
@@ -131,7 +130,7 @@ Blazebase isn't currently ready public use. Contact steve@compose.run if you're 
 
 ### `useRealtimeReducer`
 
-This is the core Blazebase function. It is a realtime and persistent version of the built-in `useReducer` React hook. Like `useReducer` it takes an `initialValue` and a `reducer` (as keyword arguments), but it also accepts a `name` to uniquely identify the persistent state.
+This is the core ComposeJS function. It is a realtime and persistent version of the built-in `useReducer` React hook. Like `useReducer` it takes an `initialValue` and a `reducer` (as keyword arguments), but it also accepts a `name` to uniquely identify the persistent state.
 
 ```ts
 function useRealtimeReducer<State, Action, Message>({
@@ -149,7 +148,7 @@ It returns an array. The first value represents the realtime, persistent state. 
 
 Unlike the local hook, `useRealtimeReducer` dispatches all actions to a server which timestamps them and runs your reducer function. Any state changes are beamed back to each client node efficiently as diffs.
 
-In development mode, the reducer runs locally every user's browser. When you build your application, Blazebase automatically pulls out your reducer functions into separate files to be deployed as Google Cloud or Lambda Functions.
+In development mode, the reducer runs locally every user's browser. When you build your application, ComposeJS automatically pulls out your reducer functions into separate files to be deployed as Google Cloud or Lambda Functions.
 
 `useRealtimeReducer` provides a way for the reducer to communicate directly back to the action dispatcher. This can useful when the frontend waits on a reducer to confirm or reject an action. For example, when a user picks a name that needs to be unique, your app can `await dispatcher(someAction)` for success or rejection message. You can send these messages back to dispatchers by having your reducer accept a third argument: a `resolve` function. In the reducer, you can `resolve(someMessage)` which will resolve the Promise for the dispatcher of that action.
 
@@ -204,9 +203,9 @@ It is also useful in migrations. More on this in the **Migrations** sections bel
 
 Realtime reducers are _immutable_ in the sense that once created, can _never be redefined or arbitrarily mutated_. Any state change is fully described in the reducer function.
 
-This is inspired by immutability in functional programming, one of the core abstractions in React. While we of course need data to _change over time_, we want to model that reactivity immutably. Unlike a database, which is a big blob of mutable state, which any part of your app can mutate in any way at any time, all persistent state in Blazebase is defined once and only once, and cannot be mutated from anywhere. Only its predefined actions can affect it, in the ways predefined by its reducer.
+This is inspired by immutability in functional programming, one of the core abstractions in React. While we of course need data to _change over time_, we want to model that reactivity immutably. Unlike a database, which is a big blob of mutable state, which any part of your app can mutate in any way at any time, all persistent state in ComposeJS is defined once and only once, and cannot be mutated from anywhere. Only its predefined actions can affect it, in the ways predefined by its reducer.
 
-Thus: the question of migration. In a normal database app, migrations happen whenever the schema changes. In Blazebase, migrations happen whenever either the schema _or_ the reducer function changes.
+Thus: the question of migration. In a normal database app, migrations happen whenever the schema changes. In ComposeJS, migrations happen whenever either the schema _or_ the reducer function changes.
 
 However, a simple migration without a schema change is easy: just want to migrate over all the data. This is how you set it up:
 
@@ -322,4 +321,4 @@ const useMessages = useRealtimeReducer<Message[], MessageAction, MessageError>({
 
 ## Private data - _coming soon_
 
-Currently all data in Blazebase is public, but we are working on a way to add this capability.
+Currently all data in ComposeJS is public, but we are working on a way to add this capability.
