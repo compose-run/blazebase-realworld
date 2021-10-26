@@ -12,7 +12,7 @@ _A whole database without leaving React_
 ❌ &nbsp;Battle-tested  
 ❌ &nbsp;Works Offline
 
-![](https://user-images.githubusercontent.com/2288939/138901405-d107c641-7639-4439-b6c0-e74ff7f61fc5.png)
+![](https://user-images.githubusercontent.com/2288939/138917967-aba158a1-f573-49f7-8c19-eba6113d4ece.png)
 
 [![Edit ComposeJS Template](https://codesandbox.io/static/img/play-codesandbox.svg)](https://codesandbox.io/s/pensive-river-0hybn?fontsize=14&hidenavigation=1&theme=dark)
 
