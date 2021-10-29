@@ -2,17 +2,21 @@
 
 _A whole database without leaving React_
 
-✅ &nbsp;Add to your app in 10 seconds  
-✅ &nbsp;Authentication  
-✅ &nbsp;Realtime  
-✅ &nbsp;No SQL, NoSQL, or GraphQL  
-✅ &nbsp;Caching built-in  
-✅ &nbsp;Open-source  
-❌ &nbsp;Scalable  
-❌ &nbsp;Battle-tested  
-❌ &nbsp;Works Offline
+### useRealtimeState
 
-![](https://user-images.githubusercontent.com/2288939/138901405-d107c641-7639-4439-b6c0-e74ff7f61fc5.png)
+Add a `name` to `useState` to get a persistent, realtime state:
+
+![](https://user-images.githubusercontent.com/2288939/139447267-76a76bf7-f964-4f80-9c44-dd008e74fd8f.png)
+
+[![Edit ComposeJS useRealtimeState Template](https://codesandbox.io/static/img/play-codesandbox.svg)](https://codesandbox.io/s/composejs-userealtimestate-template-9q3vb?fontsize=14&hidenavigation=1&theme=dark)
+
+### useRealtimeReducer
+
+Add a `name` to `useReducer` to get a persistent, realtime state:
+
+![](https://user-images.githubusercontent.com/2288939/139447266-d986daa8-2c49-4a9d-aed9-283abbf89864.png)
+
+Actions are dispatched to our servers. We run your reducer, and efficiently send back the updated state via diffs.
 
 [![Edit ComposeJS Template](https://codesandbox.io/static/img/play-codesandbox.svg)](https://codesandbox.io/s/pensive-river-0hybn?fontsize=14&hidenavigation=1&theme=dark)
 

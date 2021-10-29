@@ -521,3 +521,18 @@ export function useRealtimeReducer<State, Action, Message>({
 
   return [realtimeContext.currentValue, (value) => emitWithResponse(name, value)];
 }
+
+export const useRealtimeState = <A>({
+  name,
+  initialValue,
+  initialState,
+}: {
+  name: string;
+  initialValue?: A;
+  initialState?: A;
+}): [A | undefined, (A) => void] =>
+  useRealtimeReducer({
+    name,
+    initialValue: initialValue || initialState,
+    reducer: (state, action) => action,
+  });
